@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { motion } from 'framer-motion'
 import { useInView } from 'react-intersection-observer'
 import ScrambleHeading from './ScrambleHeading'
+import WordReveal from './WordReveal'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -188,15 +189,19 @@ export default function About() {
             "Transforming complex problems into elegant digital solutions — at the intersection of web and machine intelligence."
           </motion.blockquote>
 
-          <motion.p variants={itemVariants} className="text-base md:text-lg text-[var(--text-secondary)] leading-relaxed font-light">
-            I'm <strong className="text-[var(--text-primary)] font-medium">Adit Kolhe</strong>, a Computer Science (Data Science) student at{' '}
-            <strong className="text-[var(--text-primary)] font-medium">LNCT Bhopal</strong>, graduating in July 2027. I build across the full spectrum — from pixel-perfect React UIs to ML pipelines achieving 92% accuracy.
-          </motion.p>
+          <motion.div variants={itemVariants}>
+            <WordReveal
+              text="I'm **Adit Kolhe**, a Computer Science (Data Science) student at **LNCT Bhopal**, graduating in July 2027. I build across the full spectrum — from pixel-perfect React UIs to ML pipelines achieving gold:92% accuracy."
+              className="text-base md:text-lg text-[var(--text-secondary)] leading-relaxed font-light"
+            />
+          </motion.div>
 
-          <motion.p variants={itemVariants} className="text-base md:text-lg text-[var(--text-secondary)] leading-relaxed font-light">
-            A <strong className="text-[var(--text-primary)] font-medium">TIT Srijan National Level Hackathon 2026 Finalist</strong>, I shipped AI-powered tools and a responsive train management system that boosted user engagement by{' '}
-            <span className="text-[var(--accent-gold)] font-medium">40%</span>. I also build at GDG Bhopal community events — currently diving deep into the MERN stack and DSA.
-          </motion.p>
+          <motion.div variants={itemVariants}>
+            <WordReveal
+              text="A **TIT Srijan National Level Hackathon 2026 Finalist**, I shipped AI-powered tools and a responsive train management system that boosted user engagement by gold:40%. I also build at GDG Bhopal community events — currently diving deep into the MERN stack and DSA."
+              className="text-base md:text-lg text-[var(--text-secondary)] leading-relaxed font-light"
+            />
+          </motion.div>
 
           <motion.div variants={itemVariants} className="flex flex-col gap-4">
             <h4 className="font-mono text-[0.68rem] tracking-[0.2em] text-[var(--text-muted)] uppercase">Education</h4>

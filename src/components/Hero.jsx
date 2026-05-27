@@ -1,13 +1,17 @@
 import { useEffect, useRef, useCallback } from 'react'
 import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ArrowDown } from 'lucide-react'
 import { socials } from '../data/portfolioData'
 
-const ROLES = ['Front-end Developer', 'ML Engineer', 'Hackathon Builder', 'Data Scientist']
-const NAME = 'ADIT KOLHE'
-const NAME_LETTERS = NAME.split('')
+gsap.registerPlugin(ScrollTrigger)
 
-// ─── Brand SVGs ──────────────────────────────────────────────
+const ROLES = ['Front-end Developer', 'ML Engineer', 'Hackathon Builder', 'Data Scientist']
+
+// word groups for split animation
+const WORD_1 = ['A', 'D', 'I', 'T']
+const WORD_2 = ['K', 'O', 'L', 'H', 'E']
+
 const IconGithub = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
     <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
@@ -29,56 +33,36 @@ const IconCredly = () => (
   </svg>
 )
 
-// ─── Magnetic Button ─────────────────────────────────────────
-function MagneticButton({ children, className, href, onClick, style, onMouseEnter, onMouseLeave, 'aria-label': ariaLabel }) {
+function MagneticButton({ children, className, href, onClick, 'aria-label': ariaLabel }) {
   const btnRef = useRef(null)
-
   const handleMouseMove = useCallback((e) => {
     const btn = btnRef.current
     if (!btn) return
     const rect = btn.getBoundingClientRect()
     const x = e.clientX - rect.left - rect.width / 2
     const y = e.clientY - rect.top - rect.height / 2
-    gsap.to(btn, {
-      x: x * 0.28,
-      y: y * 0.28,
-      duration: 0.4,
-      ease: 'power2.out',
-    })
+    gsap.to(btn, { x: x * 0.28, y: y * 0.28, duration: 0.4, ease: 'power2.out' })
   }, [])
-
-  const handleMouseLeave = useCallback((e) => {
+  const handleMouseLeave = useCallback(() => {
     gsap.to(btnRef.current, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.4)' })
-    onMouseLeave?.(e)
-  }, [onMouseLeave])
-
+  }, [])
   const El = href ? 'a' : 'button'
-
   return (
-    <El
-      ref={btnRef}
-      href={href}
-      onClick={onClick}
-      className={className}
-      style={style}
-      aria-label={ariaLabel}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      data-cursor="hover"
-    >
+    <El ref={btnRef} href={href} onClick={onClick} className={className} aria-label={ariaLabel}
+      onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} data-cursor="hover">
       {children}
     </El>
   )
 }
 
-// ─── Hero Component ───────────────────────────────────────────
 export default function Hero() {
   const sectionRef = useRef(null)
   const typewriterRef = useRef(null)
   const particlesRef = useRef(null)
   const spotlightRef = useRef(null)
   const nameRef = useRef(null)
+  const word1Ref = useRef(null)
+  const word2Ref = useRef(null)
   const roleIndex = useRef(0)
   const charIndex = useRef(0)
   const isDeleting = useRef(false)
@@ -99,21 +83,92 @@ export default function Hero() {
     return () => ctx.revert()
   }, [])
 
+  // ── SCROLL EXIT: name splits apart + content fades ──
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const section = sectionRef.current
+      if (!section) return
+
+      // "ADIT" flies to the LEFT
+      gsap.to(word1Ref.current, {
+        x: '-25vw',
+        opacity: 0,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: section,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1.2,
+        },
+      })
+
+      // "KOLHE" flies to the RIGHT
+      gsap.to(word2Ref.current, {
+        x: '25vw',
+        opacity: 0,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: section,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1.2,
+        },
+      })
+
+      // Role, desc, CTAs, socials fade up and out
+      gsap.to('.hero-exit', {
+        opacity: 0,
+        y: -50,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: section,
+          start: 'top top',
+          end: '50% top',
+          scrub: 1,
+        },
+      })
+
+      // Scroll indicator fades out quickly
+      gsap.to('.hero-scroll', {
+        opacity: 0,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: section,
+          start: 'top top',
+          end: '20% top',
+          scrub: 0.5,
+        },
+      })
+
+      // Scale up the background grid as you scroll away
+      gsap.to('.hero-grid-bg', {
+        scale: 1.3,
+        opacity: 0,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: section,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1,
+        },
+      })
+    }, sectionRef)
+
+    return () => ctx.revert()
+  }, [])
+
   // ── Periodic glitch on name ──
   useEffect(() => {
     const el = nameRef.current
     if (!el) return
-    let glitchTimer
-
+    let t
     const doGlitch = () => {
       el.classList.add('glitch-active')
       setTimeout(() => el.classList.remove('glitch-active'), 350)
-      glitchTimer = setTimeout(doGlitch, Math.random() * 4000 + 4000)
+      t = setTimeout(doGlitch, Math.random() * 4000 + 4000)
     }
-
-    // First glitch after entrance
-    glitchTimer = setTimeout(doGlitch, 3500)
-    return () => clearTimeout(glitchTimer)
+    t = setTimeout(doGlitch, 3500)
+    return () => clearTimeout(t)
   }, [])
 
   // ── Cursor spotlight ──
@@ -121,21 +176,16 @@ export default function Hero() {
     const section = sectionRef.current
     const spotlight = spotlightRef.current
     if (!section || !spotlight) return
-
-    const onMouseMove = (e) => {
+    const onMove = (e) => {
       const rect = section.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const y = e.clientY - rect.top
       gsap.to(spotlight, {
-        '--sx': `${x}px`,
-        '--sy': `${y}px`,
-        duration: 0.8,
-        ease: 'power2.out',
+        '--sx': `${e.clientX - rect.left}px`,
+        '--sy': `${e.clientY - rect.top}px`,
+        duration: 0.8, ease: 'power2.out',
       })
     }
-
-    section.addEventListener('mousemove', onMouseMove)
-    return () => section.removeEventListener('mousemove', onMouseMove)
+    section.addEventListener('mousemove', onMove)
+    return () => section.removeEventListener('mousemove', onMove)
   }, [])
 
   // ── Typewriter ──
@@ -143,7 +193,6 @@ export default function Hero() {
     const el = typewriterRef.current
     if (!el) return
     let timer
-
     function type() {
       if (isPaused.current) return
       const current = ROLES[roleIndex.current]
@@ -153,8 +202,7 @@ export default function Hero() {
         if (charIndex.current === 0) {
           isDeleting.current = false
           roleIndex.current = (roleIndex.current + 1) % ROLES.length
-          timer = setTimeout(type, 400)
-          return
+          timer = setTimeout(type, 400); return
         }
         timer = setTimeout(type, 45)
       } else {
@@ -162,19 +210,14 @@ export default function Hero() {
         charIndex.current++
         if (charIndex.current === current.length) {
           isPaused.current = true
-          timer = setTimeout(() => {
-            isPaused.current = false
-            isDeleting.current = true
-            type()
-          }, 2200)
+          timer = setTimeout(() => { isPaused.current = false; isDeleting.current = true; type() }, 2200)
           return
         }
         timer = setTimeout(type, 75)
       }
     }
-
-    const startDelay = setTimeout(() => type(), 1800)
-    return () => { clearTimeout(timer); clearTimeout(startDelay) }
+    const start = setTimeout(() => type(), 1800)
+    return () => { clearTimeout(timer); clearTimeout(start) }
   }, [])
 
   // ── Floating particles ──
@@ -182,7 +225,6 @@ export default function Hero() {
     const container = particlesRef.current
     if (!container) return
     const particles = []
-
     for (let i = 0; i < 22; i++) {
       const el = document.createElement('div')
       const size = Math.random() * 3 + 1.5
@@ -190,14 +232,8 @@ export default function Hero() {
       el.style.cssText = `width:${size}px;height:${size}px;opacity:${Math.random() * 0.35 + 0.05};left:${Math.random() * 100}%;top:${Math.random() * 100}%;`
       container.appendChild(el)
       particles.push(el)
-      gsap.to(el, {
-        x: `${(Math.random() - 0.5) * 120}`,
-        y: `${(Math.random() - 0.5) * 120}`,
-        duration: Math.random() * 12 + 8,
-        repeat: -1, yoyo: true, ease: 'sine.inOut', delay: Math.random() * 5,
-      })
+      gsap.to(el, { x: `${(Math.random() - 0.5) * 120}`, y: `${(Math.random() - 0.5) * 120}`, duration: Math.random() * 12 + 8, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: Math.random() * 5 })
     }
-
     return () => particles.forEach((p) => { gsap.killTweensOf(p); p.remove() })
   }, [])
 
@@ -215,137 +251,100 @@ export default function Hero() {
       className="relative min-h-screen flex flex-col justify-center pt-[72px] overflow-hidden"
       aria-labelledby="hero-heading"
     >
-      {/* Cursor spotlight layer */}
-      <div
-        ref={spotlightRef}
-        className="absolute inset-0 pointer-events-none z-[1]"
-        style={{
-          '--sx': '50%',
-          '--sy': '40%',
-          background: 'radial-gradient(600px circle at var(--sx) var(--sy), rgba(201,168,76,0.07) 0%, transparent 70%)',
-        }}
-        aria-hidden="true"
-      />
+      {/* Cursor spotlight */}
+      <div ref={spotlightRef} className="absolute inset-0 pointer-events-none z-[1]"
+        style={{ '--sx': '50%', '--sy': '40%', background: 'radial-gradient(600px circle at var(--sx) var(--sy), rgba(201,168,76,0.07) 0%, transparent 70%)' }}
+        aria-hidden="true" />
 
-      {/* Grid bg */}
       <div className="hero-grid-bg" aria-hidden="true" />
-
-      {/* Particles */}
       <div ref={particlesRef} className="absolute inset-0 pointer-events-none z-0" aria-hidden="true" />
-
-      {/* Static radial glow */}
-      <div
-        className="absolute inset-0 pointer-events-none"
+      <div className="absolute inset-0 pointer-events-none"
         style={{ background: 'radial-gradient(ellipse 70% 50% at 65% 30%, rgba(201,168,76,0.04) 0%, transparent 70%)' }}
-        aria-hidden="true"
-      />
+        aria-hidden="true" />
 
       {/* Available badge */}
-      <div
-        className="hero-badge absolute top-[90px] right-6 md:right-16 flex items-center gap-2 px-3 py-1.5 border border-[var(--border-hover)] rounded-full bg-[var(--accent-glow)]"
-        role="status"
-      >
+      <div className="hero-badge absolute top-[90px] right-6 md:right-16 flex items-center gap-2 px-3 py-1.5 border border-[var(--border-hover)] rounded-full bg-[var(--accent-glow)]" role="status">
         <span className="status-dot" />
-        <span className="font-mono text-[0.65rem] tracking-[0.15em] text-[var(--accent-gold)] uppercase">
-          Available for Internships
-        </span>
+        <span className="font-mono text-[0.65rem] tracking-[0.15em] text-[var(--accent-gold)] uppercase">Available for Internships</span>
       </div>
 
       {/* Main content */}
       <div className="relative z-10 px-6 md:px-16 max-w-[1400px]">
 
-        {/* NAME — glitch container */}
+        {/* NAME — two word groups for split-apart scroll effect */}
         <h1
           id="hero-heading"
           ref={nameRef}
-          className="hero-name-glitch font-display leading-[0.88] mb-8 select-none"
-          style={{ fontSize: 'clamp(4.5rem, 14vw, 13rem)', letterSpacing: '-0.02em' }}
+          className="hero-name-glitch font-display leading-[0.88] mb-8 select-none flex flex-wrap items-end"
+          style={{ fontSize: 'clamp(4.5rem, 14vw, 13rem)', letterSpacing: '-0.02em', gap: '0.25em' }}
           aria-label="Adit Kolhe"
           data-text="ADIT KOLHE"
         >
-          {NAME_LETTERS.map((letter, i) => (
-            <span
-              key={i}
-              className="hero-letter-wrapper"
-              aria-hidden="true"
-              style={{
-                display: 'inline-block',
-                overflow: 'hidden',
-                lineHeight: '0.95',
-                ...(letter === ' ' ? { width: '0.25em' } : {}),
-              }}
-            >
-              {letter !== ' ' && (
-                <span
-                  className="hero-letter inline-block"
-                  style={{ transform: 'translateY(110%)' }}
-                >
-                  {letter}
-                </span>
-              )}
-            </span>
-          ))}
+          {/* ADIT — flies left on scroll */}
+          <span ref={word1Ref} className="inline-flex" aria-hidden="true">
+            {WORD_1.map((letter, i) => (
+              <span key={i} className="hero-letter-wrapper" style={{ display: 'inline-block', overflow: 'hidden', lineHeight: '0.95' }}>
+                <span className="hero-letter inline-block" style={{ transform: 'translateY(110%)' }}>{letter}</span>
+              </span>
+            ))}
+          </span>
+
+          {/* KOLHE — flies right on scroll */}
+          <span ref={word2Ref} className="inline-flex" aria-hidden="true">
+            {WORD_2.map((letter, i) => (
+              <span key={i} className="hero-letter-wrapper" style={{ display: 'inline-block', overflow: 'hidden', lineHeight: '0.95' }}>
+                <span className="hero-letter inline-block" style={{ transform: 'translateY(110%)' }}>{letter}</span>
+              </span>
+            ))}
+          </span>
         </h1>
 
-        {/* Role typewriter */}
-        <div className="hero-role flex items-center gap-4 mb-6">
-          <span className="w-10 h-[1px] flex-shrink-0 bg-[var(--text-muted)]" aria-hidden="true" />
-          <p className="font-body text-lg md:text-2xl text-[var(--text-secondary)] font-light">
-            <span ref={typewriterRef} className="text-[var(--text-primary)] font-medium" aria-live="polite">
-              Front-end Developer
-            </span>
-            <span
-              className="inline-block w-[2px] h-[1.1em] bg-[var(--accent-gold)] ml-[2px] align-middle"
-              style={{ animation: 'blink 1s step-end infinite' }}
-              aria-hidden="true"
-            />
+        {/* Role + desc + CTAs + socials all fade on scroll */}
+        <div className="hero-exit">
+          <div className="hero-role flex items-center gap-4 mb-6">
+            <span className="w-10 h-[1px] flex-shrink-0 bg-[var(--text-muted)]" aria-hidden="true" />
+            <p className="font-body text-lg md:text-2xl text-[var(--text-secondary)] font-light">
+              <span ref={typewriterRef} className="text-[var(--text-primary)] font-medium" aria-live="polite">Front-end Developer</span>
+              <span className="inline-block w-[2px] h-[1.1em] bg-[var(--accent-gold)] ml-[2px] align-middle" style={{ animation: 'blink 1s step-end infinite' }} aria-hidden="true" />
+            </p>
+          </div>
+
+          <p className="hero-desc max-w-xl text-base md:text-lg text-[var(--text-secondary)] font-light leading-relaxed mb-12">
+            CS student at LNCT Bhopal · TIT Srijan National Hackathon 2026 Finalist · Building at the intersection of web and machine intelligence.
           </p>
-        </div>
 
-        {/* Description */}
-        <p className="hero-desc max-w-xl text-base md:text-lg text-[var(--text-secondary)] font-light leading-relaxed mb-12">
-          CS student at LNCT Bhopal · TIT Srijan National Hackathon 2026 Finalist · Building at the intersection of web and machine intelligence.
-        </p>
+          <div className="flex flex-col sm:flex-row gap-4 mb-20">
+            <MagneticButton
+              href="#projects"
+              className="hero-cta group inline-flex items-center justify-center gap-3 px-9 py-4 bg-[var(--accent-gold)] text-[var(--bg-primary)] font-mono text-xs tracking-[0.12em] uppercase font-medium relative overflow-hidden"
+              onClick={(e) => { e.preventDefault(); document.querySelector('#projects')?.scrollIntoView({ behavior: 'smooth' }) }}
+            >
+              <span className="absolute inset-0 bg-black/10 -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" aria-hidden="true" />
+              <span className="relative z-10">View Work</span>
+              <ArrowDown size={14} className="relative z-10 -rotate-90" aria-hidden="true" />
+            </MagneticButton>
 
-        {/* CTAs — magnetic */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-20">
-          <MagneticButton
-            href="#projects"
-            className="hero-cta group inline-flex items-center justify-center gap-3 px-9 py-4 bg-[var(--accent-gold)] text-[var(--bg-primary)] font-mono text-xs tracking-[0.12em] uppercase font-medium relative overflow-hidden"
-            onClick={(e) => { e.preventDefault(); document.querySelector('#projects')?.scrollIntoView({ behavior: 'smooth' }) }}
-          >
-            <span className="absolute inset-0 bg-black/10 -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" aria-hidden="true" />
-            <span className="relative z-10">View Work</span>
-            <ArrowDown size={14} className="relative z-10 -rotate-90" aria-hidden="true" />
-          </MagneticButton>
+            <MagneticButton
+              href="#"
+              className="hero-cta group inline-flex items-center justify-center gap-3 px-9 py-4 border border-[var(--border)] text-[var(--text-primary)] font-mono text-xs tracking-[0.12em] uppercase font-light relative overflow-hidden"
+              aria-label="Download Resume PDF"
+            >
+              <span className="absolute inset-0 bg-[var(--accent-gold)] translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" aria-hidden="true" />
+              <span className="relative z-10 group-hover:text-[var(--bg-primary)] transition-colors duration-300">Download CV</span>
+            </MagneticButton>
+          </div>
 
-          <MagneticButton
-            href="#"
-            className="hero-cta group inline-flex items-center justify-center gap-3 px-9 py-4 border border-[var(--border)] text-[var(--text-primary)] font-mono text-xs tracking-[0.12em] uppercase font-light relative overflow-hidden"
-            aria-label="Download Resume PDF"
-          >
-            <span className="absolute inset-0 bg-[var(--accent-gold)] translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" aria-hidden="true" />
-            <span className="relative z-10 group-hover:text-[var(--bg-primary)] transition-colors duration-300">Download CV</span>
-          </MagneticButton>
-        </div>
-
-        {/* Socials */}
-        <div className="flex flex-col gap-3">
-          <span className="font-mono text-[0.65rem] tracking-[0.25em] text-[var(--text-muted)] uppercase">Find me</span>
-          <div className="flex gap-3">
-            {socialLinks.map(({ href, label, icon }) => (
-              <a
-                key={label}
-                href={href}
-                className="hero-social w-10 h-10 border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] rounded-sm transition-all duration-300 hover:border-[rgba(201,168,76,0.4)] hover:text-[var(--accent-gold)] hover:bg-[rgba(201,168,76,0.08)] hover:-translate-y-[3px]"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`${label} profile`}
-                data-cursor="hover"
-              >
-                {icon}
-              </a>
-            ))}
+          <div className="flex flex-col gap-3">
+            <span className="font-mono text-[0.65rem] tracking-[0.25em] text-[var(--text-muted)] uppercase">Find me</span>
+            <div className="flex gap-3">
+              {socialLinks.map(({ href, label, icon }) => (
+                <a key={label} href={href}
+                  className="hero-social w-10 h-10 border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] rounded-sm transition-all duration-300 hover:border-[rgba(201,168,76,0.4)] hover:text-[var(--accent-gold)] hover:bg-[rgba(201,168,76,0.08)] hover:-translate-y-[3px]"
+                  target="_blank" rel="noopener noreferrer" aria-label={`${label} profile`} data-cursor="hover">
+                  {icon}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -359,54 +358,40 @@ export default function Hero() {
       <style>{`
         @keyframes blink { 50% { opacity: 0; } }
 
-        /* ── Glitch effect ── */
         .hero-name-glitch { position: relative; }
-
-        .hero-name-glitch::before,
-        .hero-name-glitch::after {
+        .hero-name-glitch::before, .hero-name-glitch::after {
           content: attr(data-text);
-          position: absolute;
-          top: 0; left: 0;
+          position: absolute; top: 0; left: 0;
           width: 100%; height: 100%;
-          font-size: inherit;
-          font-family: inherit;
-          font-weight: inherit;
-          letter-spacing: inherit;
-          line-height: inherit;
-          pointer-events: none;
-          opacity: 0;
+          font-size: inherit; font-family: inherit; font-weight: inherit;
+          letter-spacing: inherit; line-height: inherit;
+          pointer-events: none; opacity: 0;
         }
-
         .hero-name-glitch.glitch-active::before {
-          opacity: 1;
-          color: #ff2d55;
+          opacity: 1; color: #ff2d55;
           animation: glitch-before 0.35s steps(2) forwards;
           clip-path: polygon(0 15%, 100% 15%, 100% 40%, 0 40%);
         }
-
         .hero-name-glitch.glitch-active::after {
-          opacity: 1;
-          color: #00f5ff;
+          opacity: 1; color: #00f5ff;
           animation: glitch-after 0.35s steps(2) forwards;
           clip-path: polygon(0 60%, 100% 60%, 100% 85%, 0 85%);
         }
-
         @keyframes glitch-before {
-          0%   { transform: translateX(-6px) skewX(-2deg); }
-          20%  { transform: translateX(4px)  skewX(1deg); }
-          40%  { transform: translateX(-3px) skewX(-1deg); }
-          60%  { transform: translateX(6px)  skewX(2deg); }
-          80%  { transform: translateX(-2px) skewX(0deg); }
-          100% { transform: translateX(0px); opacity: 0; }
+          0%  { transform: translateX(-6px) skewX(-2deg); }
+          20% { transform: translateX(4px) skewX(1deg); }
+          40% { transform: translateX(-3px) skewX(-1deg); }
+          60% { transform: translateX(6px) skewX(2deg); }
+          80% { transform: translateX(-2px); }
+          100%{ transform: translateX(0); opacity: 0; }
         }
-
         @keyframes glitch-after {
-          0%   { transform: translateX(6px)  skewX(2deg); }
-          20%  { transform: translateX(-4px) skewX(-1deg); }
-          40%  { transform: translateX(3px)  skewX(1deg); }
-          60%  { transform: translateX(-6px) skewX(-2deg); }
-          80%  { transform: translateX(2px)  skewX(0deg); }
-          100% { transform: translateX(0px); opacity: 0; }
+          0%  { transform: translateX(6px) skewX(2deg); }
+          20% { transform: translateX(-4px) skewX(-1deg); }
+          40% { transform: translateX(3px) skewX(1deg); }
+          60% { transform: translateX(-6px) skewX(-2deg); }
+          80% { transform: translateX(2px); }
+          100%{ transform: translateX(0); opacity: 0; }
         }
       `}</style>
     </section>

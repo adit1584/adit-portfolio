@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Toaster } from 'react-hot-toast'
 
 import { useLenis } from './hooks/useLenis'
+import { useScrollSkew } from './hooks/useScrollSkew'
 import Cursor from './components/Cursor'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
@@ -20,7 +21,13 @@ gsap.registerPlugin(ScrollTrigger)
 export default function App() {
   useLenis()
   const wipeRef = useRef(null)
+  const skewRef = useRef(null)
   const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  // Apply Locomotive-style scroll skewing
+  if (!isReducedMotion) {
+    useScrollSkew(skewRef, 2.5, 0.08)
+  }
 
   // Gold wipe overlay on initial load
   useEffect(() => {
@@ -77,7 +84,7 @@ export default function App() {
       <Navbar />
 
       {/* Main content */}
-      <main>
+      <main ref={skewRef} style={{ willChange: 'transform' }}>
         <Hero />
         <About />
         <Skills />
